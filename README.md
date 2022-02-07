@@ -5,7 +5,7 @@ A little helper trait to easily upload files from a local filesystem to another 
 ## Installation
 
 ```bash
-composer require eluhr\yii2-fileflyupload
+composer require eluhr/yii2-fileflyupload
 ```
 
 ## Usage
