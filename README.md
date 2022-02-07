@@ -18,6 +18,7 @@ Your config must configure the needed filesystems see [creocoder/yii2-flysystem]
 
   use eluhr\fileflyupload\traits\FileflyUploadTrait;
   use yii\base\Model;
+  use yii\helpers\FileHelper;
 
   class MyModel extends Model
   {
@@ -25,31 +26,39 @@ Your config must configure the needed filesystems see [creocoder/yii2-flysystem]
 
       public $file;
       
-      public function getLocalFs() {
+      public function getLocalFs(): string {
           return 'fsLocal';
       }
       
-      public function getStorageFs() {
+      public function getStorageFs(): string {
           return 'fsStorage';
       }
 
       public function rules(): array
       {
-          $rules[] = parent::rules();
+          $rules = parent::rules();
           $rules[] = [
               'file',
               'file',
-              'skipOnEmpty' => false
+              'skipOnEmpty' => false,
               'extensions' => 'pdf',
               'maxSize' => 3145728 // 3 MB
           ];
+          return $rules;
       }
 
       public function upload(): bool
       {
           if ($this->validate()) {
               $relativePath = '/path/to/file.pdf';
-              return $this->saveAs($relativePath) && $this->moveLocalFileToStorage($relativePath);
+              $absolutePath = \Yii::$app->get($this->getLocalFs())->path . $relativePath;
+              if (!FileHelper::createDirectory(dirname($absolutePath))) {
+                  return false;
+              }
+              if ($this->file->saveAs($absolutePath) && $this->moveLocalFileToStorage($relativePath)) {
+                  return true;
+              }
+              $this->addError('file', \Yii::t('model','Error while uploading file'));
           }
           return false;
       }
@@ -70,7 +79,7 @@ Your config must configure the needed filesystems see [creocoder/yii2-flysystem]
       public function actionUpload()
       {
           $model = new MyModel();
-          if (Yii::$app->getRequest->getIsPost()) {
+          if (Yii::$app->getRequest()->getIsPost()) {
               $model->file = UploadedFile::getInstance($model, 'file');
               if ($model->upload()) {
                   return $this->redirect(['upload']);
@@ -87,7 +96,7 @@ Your config must configure the needed filesystems see [creocoder/yii2-flysystem]
   use yii\widgets\ActiveForm;
 
   $form = ActiveForm::begin();
-  echo $form->field($model, 'file')->fileInput(['accept' => 'application/pdf');
+  echo $form->field($model, 'file')->fileInput(['accept' => 'application/pdf']);
   echo Html::submitButton();
   ActiveForm::end();
   ```
