@@ -96,4 +96,24 @@ trait FileflyUploadTrait
         }
         return false;
     }
+    
+    /**
+     * Remove file from storage if exists
+     *
+     * @param string $relativePath
+     * @return bool
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function deleteFromStorage(string $relativePath): bool
+    {
+        $manager = $this->mountManager();
+        try {
+            if ($manager->has('storage://' . $relativePath)) {
+                return $manager->delete('storage://' . $relativePath);
+            }
+        } catch (FileNotFoundException $e) {
+            Yii::error($e->getMessage(), __METHOD__);
+        }
+        return true;
+    }
 }
