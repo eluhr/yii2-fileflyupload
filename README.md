@@ -62,6 +62,15 @@ Your config must configure the needed filesystems see [creocoder/yii2-flysystem]
           }
           return false;
       }
+      
+            
+      public function beforeDelete()
+      {
+          if (!$this->deleteFromStorage('/path/to/file.pdf')) {
+              return false;
+          }
+          return parent::beforeDelete();
+      }
   }
  ```
 
